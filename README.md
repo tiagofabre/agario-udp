@@ -1,19 +1,11 @@
-# osmenu
-An interactive menu to show information about the system,
-to show features from OS and Readline node modules.
+(Under construction)
 
-> This App demo was part of [NUGCE](http://nugce.org/) talk:
+# osmenu app
+An interactive app made with electron to show information about the system
 
-> http://nugce.org/5o-meetup-nugce/
+> This App demo was part of [NUGCE](http://nugce.org/) talk and now is being extended to show a cool UI:
 
-> 26 November 2016
+> 01 December 2016
 
 
-run:
-
-```
-node Readline.js
-```
-
-![Alt osmenu](https://github.com/helio-frota/osmenu/raw/master/a.png)
 
