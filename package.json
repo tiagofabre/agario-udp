@@ -5,16 +5,17 @@
   "author": "Helio Frota",
   "license": "Apache-2.0",
   "scripts": {
+    "start": "electron main.js",
     "prepublish": "nsp check"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/helio-frota/osmenu.git"
+    "url": "https://github.com/tiagofabre/osmenu"
   },
   "bugs": {
-    "url": "https://github.com/helio-frota/osmenu/issues"
+    "url": "https://github.com/tiagofabre/osmenu/issues"
   },
-  "homepage": "https://github.com/helio-frota/osmenu",
+  "homepage": "https://github.com/tiagofabre/osmenu",
   "devDependencies": {
     "eslint": "~3.8.1",
     "eslint-config-semistandard": "~7.0.0",
@@ -22,6 +23,7 @@
     "eslint-plugin-promise": "~3.3.0",
     "eslint-plugin-react": "~6.4.1",
     "eslint-plugin-standard": "~2.0.1",
-    "nsp": "~2.6.2"
+    "nsp": "~2.6.2",
+    "electron": "^1.4.1"
   }
 }
