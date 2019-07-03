@@ -19,7 +19,10 @@ if ( /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent) ) {
     global.mobile = true;
 }
 
-function startGame(type) {
+function startGame(type, transport) {
+
+    console.log(transport)
+
     global.playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '').substring(0,25);
     global.playerType = type;
 
@@ -33,7 +36,7 @@ function startGame(type) {
         setupSocket(socket);
     }
     if (!global.animLoopHandle)
-        animloop();
+        animloop(transport);
     socket.emit('respawn');
     window.chat.socket = socket;
     window.chat.registerFunctions();
@@ -51,20 +54,28 @@ function validNick() {
 
 window.onload = function() {
 
-    var btn = document.getElementById('startButton'),
-        btnS = document.getElementById('spectateButton'),
-        nickErrorText = document.querySelector('#startMenu .input-error');
+    const btnTCP = document.getElementById('startButtonTCP')
+    const btnUDP = document.getElementById('startButtonUDP')
+    const btnS = document.getElementById('spectateButton')
+    const nickErrorText = document.querySelector('#startMenu .input-error')
 
     btnS.onclick = function () {
         startGame('spectate');
     };
 
-    btn.onclick = function () {
-
-        // Checks if the nick is valid.
+    btnTCP.onclick = function () {
         if (validNick()) {
             nickErrorText.style.opacity = 0;
-            startGame('player');
+            startGame('player', 'tcp');
+        } else {
+            nickErrorText.style.opacity = 1;
+        }
+    };
+
+    btnUDP.onclick = function () {
+        if (validNick()) {
+            nickErrorText.style.opacity = 0;
+            startGame('player', 'udp');
         } else {
             nickErrorText.style.opacity = 1;
         }
@@ -529,12 +540,12 @@ window.cancelAnimFrame = (function(handle) {
             window.mozCancelAnimationFrame;
 })();
 
-function animloop() {
-    global.animLoopHandle = window.requestAnimFrame(animloop);
-    gameLoop();
+function animloop(transport) {
+    global.animLoopHandle = window.requestAnimFrame(() => animloop(transport));
+    gameLoop(transport);
 }
 
-function gameLoop() {
+function gameLoop(transport) {
     if (global.died) {
         graph.fillStyle = '#333333';
         graph.fillRect(0, 0, global.screenWidth, global.screenHeight);
@@ -572,8 +583,19 @@ function gameLoop() {
             });
 
             drawPlayers(orderMass);
-            socket.emit('0', window.canvas.target); // playerSendTarget "Heartbeat".
-
+            if(transport === 'tcp') {
+                socket.emit('0', window.canvas.target); // playerSendTarget "Heartbeat".
+            } else if (transport === 'udp'){
+                let message = Buffer.from(JSON.stringify({position: window.canvas.target,
+                                                          id: socket.id}));
+                client.send(message, 0, message.length, PORT, HOST, function(err, bytes) {
+                    if (err)
+                        throw err
+                    console.log('UDP message sent to ' + HOST +':'+ PORT)
+                })
+            } else {
+                console.log("unknown transport")
+            }
         } else {
             graph.fillStyle = '#333333';
             graph.fillRect(0, 0, global.screenWidth, global.screenHeight);
@@ -629,7 +651,7 @@ var message = new Buffer('My KungFu is Good!');
 
 var client = dgram.createSocket('udp4');
 
-setInterval(sendMsg, 300)
+//setInterval(sendMsg, 300)
 
 function sendMsg() {
     client.send(message, 0, message.length, PORT, HOST, function(err, bytes) {

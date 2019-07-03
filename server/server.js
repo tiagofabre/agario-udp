@@ -544,16 +544,18 @@ io.on("connection", function(socket) {
 });
 
 function tickPlayer(currentPlayer) {
-    if (
-        currentPlayer.lastHeartbeat <
-        new Date().getTime() - c.maxHeartbeatInterval
-    ) {
-        sockets[currentPlayer.id].emit(
-            "kick",
-            "Last heartbeat received over " + c.maxHeartbeatInterval + " ago."
-        );
-        sockets[currentPlayer.id].disconnect();
-    }
+    
+    //ignore kick due to inactivity
+    // if (
+    //     currentPlayer.lastHeartbeat <
+    //     new Date().getTime() - c.maxHeartbeatInterval
+    // ) {
+    //     sockets[currentPlayer.id].emit(
+    //         "kick",
+    //         "Last heartbeat received over " + c.maxHeartbeatInterval + " ago."
+    //     );
+    //     sockets[currentPlayer.id].disconnect();
+    // }
 
     movePlayer(currentPlayer);
 
@@ -863,10 +865,10 @@ setInterval(sendUpdates, 1000 / c.networkUpdateFactor);
 // Don't touch, IP configurations.
 var ipaddress = process.env.OPENSHIFT_NODEJS_IP || process.env.IP || c.host;
 var serverport = process.env.OPENSHIFT_NODEJS_PORT || process.env.PORT || c.port;
+
 http.listen(serverport, ipaddress, function() {
     console.log("[DEBUG] Listening on " + ipaddress + ":" + serverport);
 });
-
 
 var PORT = 33333;
 var HOST = '127.0.0.1';
@@ -875,12 +877,125 @@ var dgram = require('dgram');
 var server = dgram.createSocket('udp4');
 
 server.on('listening', function() {
-  var address = server.address();
- console.log('UDP Server listening on ' + address.address + ':' + address.port);
+    var address = server.address();
+    console.log('UDP Server listening on ' + address.address + ':' + address.port);
 });
 
 server.on('message', function(message, remote) {
- console.log(remote.address + ':' + remote.port +' - ' + message);
+    console.log(remote.address + ':' + remote.port +' - ' + message);
+
+    let decodedMessage = message.toString('utf8')
+    let u = users.find(e => e.id === decodedMessage.id)
+
+    if(!u) return
+
+    console.log(u) 
+    console.log(users)
+    console.log(decodedMessage)
+    // center the view if x/y is undefined, this will happen for spectators
+    u.x = u.x || c.gameWidth / 2;
+    u.y = u.y || c.gameHeight / 2;
+
+    var visibleFood = food
+        .map(function(f) {
+            if (
+                f.x > u.x - u.screenWidth / 2 - 20 &&
+                f.x < u.x + u.screenWidth / 2 + 20 &&
+                f.y > u.y - u.screenHeight / 2 - 20 &&
+                f.y < u.y + u.screenHeight / 2 + 20
+            ) {
+                return f;
+            }
+        })
+        .filter(function(f) {
+            return f;
+        });
+
+    var visibleVirus = virus
+        .map(function(f) {
+            if (
+                f.x > u.x - u.screenWidth / 2 - f.radius &&
+                f.x < u.x + u.screenWidth / 2 + f.radius &&
+                f.y > u.y - u.screenHeight / 2 - f.radius &&
+                f.y < u.y + u.screenHeight / 2 + f.radius
+            ) {
+                return f;
+            }
+        })
+        .filter(function(f) {
+            return f;
+        });
+
+    var visibleMass = massFood
+        .map(function(f) {
+            if (
+                f.x + f.radius > u.x - u.screenWidth / 2 - 20 &&
+                f.x - f.radius < u.x + u.screenWidth / 2 + 20 &&
+                f.y + f.radius > u.y - u.screenHeight / 2 - 20 &&
+                f.y - f.radius < u.y + u.screenHeight / 2 + 20
+            ) {
+                return f;
+            }
+        })
+        .filter(function(f) {
+            return f;
+        });
+
+    var visibleCells = users
+        .map(function(f) {
+            for (var z = 0; z < f.cells.length; z++) {
+                if (
+                    f.cells[z].x + f.cells[z].radius >
+                        u.x - u.screenWidth / 2 - 20 &&
+                    f.cells[z].x - f.cells[z].radius <
+                        u.x + u.screenWidth / 2 + 20 &&
+                    f.cells[z].y + f.cells[z].radius >
+                        u.y - u.screenHeight / 2 - 20 &&
+                    f.cells[z].y - f.cells[z].radius <
+                        u.y + u.screenHeight / 2 + 20
+                ) {
+                    z = f.cells.lenth;
+                    if (f.id !== u.id) {
+                        return {
+                            id: f.id,
+                            x: f.x,
+                            y: f.y,
+                            cells: f.cells,
+                            massTotal: Math.round(f.massTotal),
+                            hue: f.hue,
+                            name: f.name
+                        };
+                    } else {
+                        //console.log("Nombre: " + f.name + " Es Usuario");
+                        return {
+                            x: f.x,
+                            y: f.y,
+                            cells: f.cells,
+                            massTotal: Math.round(f.massTotal),
+                            hue: f.hue
+                        };
+                    }
+                }
+            }
+        })
+        .filter(function(f) {
+            return f;
+        });
+
+    const serverData = {
+        visibleCells: visibleCells,
+        visibleFood: visibleFood,
+        visibleMass: visibleMass,
+        visibleVirus: visibleVirus
+    }
+    
+    const messageResponse = Buffer.from(JSON.stringify(serverData))
+
+    server.send(messageResponse, 0, message.length, PORT, HOST, function(err, bytes) {
+        if (err)
+            throw err
+        console.log('UDP message sent to ' + HOST +':'+ PORT)
+    })
 });
 
 server.bind(PORT, HOST);
