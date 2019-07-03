@@ -1,8 +1,8 @@
 {
-  "name": "osmenu",
+  "name": "agario-udp",
   "version": "0.0.1",
   "main": "index.js",
-  "author": "Helio Frota",
+  "author": "Tiago Fabre",
   "license": "Apache-2.0",
   "scripts": {
     "start": "electron main.js",
@@ -10,20 +10,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tiagofabre/osmenu"
+    "url": "https://github.com/tiagofabre/agario-udp"
   },
-  "bugs": {
-    "url": "https://github.com/tiagofabre/osmenu/issues"
-  },
-  "homepage": "https://github.com/tiagofabre/osmenu",
   "devDependencies": {
+    "electron": "^5.0.6",
+    "electron-reload": "^1.4.0",
     "eslint": "~3.8.1",
     "eslint-config-semistandard": "~7.0.0",
     "eslint-config-standard": "~6.2.0",
     "eslint-plugin-promise": "~3.3.0",
     "eslint-plugin-react": "~6.4.1",
     "eslint-plugin-standard": "~2.0.1",
-    "nsp": "~2.6.2",
-    "electron": "^1.4.1"
+    "nsp": "~2.6.2"
+  },
+  "dependencies": {
+    "jquery": "^3.4.1",
+    "socket.io": "^2.2.0"
   }
 }
